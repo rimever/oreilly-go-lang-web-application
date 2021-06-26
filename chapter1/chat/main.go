@@ -1,6 +1,8 @@
 package main
 
 import (
+	"../chat/trace"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,17 +25,26 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 		}
 		fmt.Println(path)
-		// current directory is chapter1
-		t.template = template.Must(template.ParseFiles(filepath.Join("chat/templates", t.filename)))
+		t.template = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
 	})
-	if err := t.template.Execute(w, nil); err != nil {
+	if err := t.template.Execute(w, r); err != nil {
 		log.Fatal("Execute",err)
 	}
 }
 
+// run under commands, if you want to run this program
+// # go build -o chat
+// # ./chat -addr=":3000"
 func main() {
+	var address = flag.String("addr",":8080","Application Address")
+	flag.Parse()
+	r := newRoom()
+	r.tracer = trace.New(os.Stdout)
 	http.Handle("/", &templateHandler{filename: "chat.html"})
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	http.Handle("/room", r)
+	go r.run()
+	log.Println("Start Web Sever. Port:",*address)
+	if err := http.ListenAndServe(*address, nil); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
 	// Access http://localhost:8080/

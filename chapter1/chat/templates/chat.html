@@ -1,8 +1,53 @@
 <html>
 <head>
     <title>Chat</title>
+    <style>
+        input {
+            display: block
+        }
+
+        ul {
+            list-style: none
+        }
+    </style>
 </head>
 <body>
-Let's Chat(by template)
+<ul id="message"></ul>
+Chat Application using WebSocket
+<form id="chatbox">
+    <textarea></textarea>
+    <input type="submit" value="Send"/>
+</form>
+<script src="https://code.jquery.com/jquery-1.12.4.js" integrity="sha256-Qw82+bXyGq6MydymqBxNPYTaUXXq7c8v3CwiYwLLNXU=" crossorigin="anonymous">
+</script>
+<script>
+    $(function () {
+        var socket = null;
+        var msgBox = $("#chatbox textarea");
+        var messages = $("#message");
+        $("#chatbox").submit(function () {
+            if (!msgBox.val()) return false;
+            if (!socket) {
+                alert("error! not websocket connected")
+                return false;
+            }
+            socket.send(msgBox.val());
+            msgBox.val("");
+            return false;
+
+        });
+        if (!window["WebSocket"]) {
+            alert("error! this browser is not supported websocket")
+        }else {
+            socket = new WebSocket("ws://{{.Host}}/room");
+            socket.onclose = function () {
+                alert("finish connection");
+            }
+            socket.onmessage = function (e) {
+                messages.append($("<li>").text(e.data))
+            }
+        }
+    })
+</script>
 </body>
 </html>
