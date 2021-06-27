@@ -28,7 +28,7 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		t.template = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
 	})
 	if err := t.template.Execute(w, r); err != nil {
-		log.Fatal("Execute",err)
+		log.Fatal("Execute", err)
 	}
 }
 
@@ -36,14 +36,15 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // # go build -o chat
 // # ./chat -addr=":3000"
 func main() {
-	var address = flag.String("addr",":8080","Application Address")
+	var address = flag.String("addr", ":8080", "Application Address")
 	flag.Parse()
 	r := newRoom()
 	r.tracer = trace.New(os.Stdout)
-	http.Handle("/", &templateHandler{filename: "chat.html"})
+	http.Handle("/", MustAuth(&templateHandler{filename: "chat.html"}))
+	http.Handle("/login",&templateHandler{filename: "login.html"})
 	http.Handle("/room", r)
 	go r.run()
-	log.Println("Start Web Sever. Port:",*address)
+	log.Println("Start Web Sever. Port:", *address)
 	if err := http.ListenAndServe(*address, nil); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
